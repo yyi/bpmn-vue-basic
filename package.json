@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "serve": "vue-cli-service serve",
+        "serve": "vue-cli-service  --mode development  --open serve",
         "build": "vue-cli-service build",
         "lint": "vue-cli-service lint"
     },
@@ -19,7 +19,7 @@
         "@vue/cli-plugin-eslint": "^4.1.0",
         "@vue/cli-service": "^4.1.0",
         "babel-eslint": "^10.0.3",
-        "bpmn-js": "^6.0.4",
+        "bpmn-js": "^8.7.1",
         "eslint": "^5.16.0",
         "eslint-plugin-vue": "^5.0.0",
         "vue-router": "^3.1.3",

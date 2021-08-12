@@ -8,6 +8,7 @@
 // 引入相关的依赖
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import { xmlStr } from '../mock/xmlStr'
+import propertiesProviderModule from "bpmn-js-properties-panel/lib/provider/camunda";
 export default {
   name: '',
   components: {},
@@ -32,7 +33,21 @@ export default {
       const canvas = this.$refs.canvas
       // 建模
       this.bpmnModeler = new BpmnModeler({
-        container: canvas
+        container: canvas,
+        propertiesPanel: {
+
+        },
+        additionalModules: [
+          {
+            contextPad: ["value", {}],
+            contextPadProvider: ["value", {}],
+            palette: ["value", {}],
+            paletteProvider: ["value", {}],
+            dragging: ["value", {}],
+            move: ["value", {}],
+            create: ["value", {}],
+           }
+        ]
       })
       this.createNewDiagram()
 		},

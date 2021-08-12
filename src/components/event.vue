@@ -143,6 +143,7 @@ export default {
         that.bpmnModeler.on(event, e => {
           var elementRegistry = bpmnjs.get('elementRegistry')
           var shape = e.element ? elementRegistry.get(e.element.id) : e.shape
+          console.log(e);
           // console.log(shape)
           if (event === 'shape.added') {
             console.log('新增了shape')
