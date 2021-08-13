@@ -22,13 +22,15 @@
 // 引入相关的依赖
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import axios from 'axios'
-import { xmlStr } from '../mock/xmlStr'
+import {xmlStr} from '../mock/xmlStr'
 import propertiesProviderModule from 'bpmn-js-properties-panel/lib/provider/camunda'
+
 export default {
   name: '',
   components: {},
   // 生命周期 - 创建完成（可以访问当前this实例）
-  created() {},
+  created() {
+  },
   // 生命周期 - 载入后, Vue 实例挂载到实际的 DOM 操作完成，一般在该过程进行 Ajax 交互
   mounted() {
     this.init()
@@ -91,7 +93,7 @@ export default {
           method: 'get',
           timeout: 120000,
           url: that.xmlUrl,
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: {'Content-Type': 'multipart/form-data'}
         })
         console.log(res)
         bpmnXmlStr = res['data']
@@ -99,17 +101,30 @@ export default {
       }
     },
     // 将字符串转换成图并渲染
-    transformCanvas(bpmnXmlStr) {
-      this.bpmnModeler.importXML(bpmnXmlStr, err => {
-        if (err) {
-          console.error(err)
-        } else {
-          this.success()
-        }
+    async transformCanvas(bpmnXmlStr) {
+      try {
+        const result = await this.bpmnModeler.importXML(bpmnXmlStr)
+        const {warnings} = result
+        console.log(warnings)
+        this.success()
         // 让图能自适应屏幕
         var canvas = this.bpmnModeler.get('canvas')
         canvas.zoom('fit-viewport')
-      })
+      } catch (err) {
+        console.log(err.message, err.warnings);
+      }
+
+
+      // this.bpmnModeler.importXML(bpmnXmlStr, err => {
+      //   if (err) {
+      //     console.error(err)
+      //   } else {
+      //     this.success()
+      //   }
+      //   // 让图能自适应屏幕
+      //   var canvas = this.bpmnModeler.get('canvas')
+      //   canvas.zoom('fit-viewport')
+      // })
     },
     success() {
       console.log('创建成功!')
@@ -124,11 +139,11 @@ export default {
       const downloadLink = this.$refs.saveDiagram
       const downloadSvgLink = this.$refs.saveSvg
       // 给图绑定事件，当图有发生改变就会触发这个事件
-      this.bpmnModeler.on('commandStack.changed', function() {
-        that.saveSVG(function(err, svg) {
+      this.bpmnModeler.on('commandStack.changed', function () {
+        that.saveSVG(function (err, svg) {
           that.setEncoded(downloadSvgLink, 'diagram.svg', err ? null : svg)
         })
-        that.saveDiagram(function(err, xml) {
+        that.saveDiagram(function (err, xml) {
           that.setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml)
         })
       })
@@ -139,7 +154,7 @@ export default {
       const that = this
       // 'shape.removed', 'connect.end', 'connect.move'
       const events = ['shape.added', 'shape.move.end', 'shape.removed']
-      events.forEach(function(event) {
+      events.forEach(function (event) {
         that.bpmnModeler.on(event, e => {
           var elementRegistry = bpmnjs.get('elementRegistry')
           var shape = e.element ? elementRegistry.get(e.element.id) : e.shape
@@ -162,8 +177,8 @@ export default {
       const modeling = this.bpmnModeler.get('modeling')
       const elementRegistry = this.bpmnModeler.get('elementRegistry')
       const eventTypes = ['element.click', 'element.changed']
-      eventTypes.forEach(function(eventType) {
-        eventBus.on(eventType, function(e) {
+      eventTypes.forEach(function (eventType) {
+        eventBus.on(eventType, function (e) {
           console.log(e)
           if (!e || e.element.type == 'bpmn:Process') return
           if (eventType === 'element.changed') {
@@ -171,17 +186,21 @@ export default {
           } else if (eventType === 'element.click') {
             console.log('点击了element')
             var shape = e.element ? elementRegistry.get(e.element.id) : e.shape
-            if (shape.type === 'bpmn:StartEvent') {
-              modeling.updateProperties(shape, {
-                name: '我是修改后的虚线节点',
-                isInterrupting: false,
-                customText: '我是自定义的text属性'
-              })
-              // modeling.setColor(shape, {
-              //   fill: '#ff0000',
-              //   stroke: null
-              // })
-            }
+            console.log("------------")
+            console.log(shape.businessObject)
+            //  if (shape.type === 'bpmn:StartEvent') {
+            modeling.updateProperties(shape, {
+              name: '我是修改后的虚线节点',
+              isInterrupting: false,
+              customText: '我是自定义的text属性'
+            })
+            console.log("------------")
+            console.log(shape.businessObject)
+            modeling.setColor(shape, {
+              fill: '#ff0000',
+              stroke: null
+            })
+            //     }
           }
         })
       })
@@ -215,16 +234,28 @@ export default {
       return elementRegistry.get(id)
     },
     // 下载为SVG格式,done是个函数，调用的时候传入的
-    saveSVG(done) {
+    async saveSVG(done) {
       // 把传入的done再传给bpmn原型的saveSVG函数调用
-      this.bpmnModeler.saveSVG(done)
+      try {
+        const {svg} = await this.bpmnModeler.saveSVG()
+        done(null, svg)
+      } catch (err) {
+        console.log(err)
+      }
     },
     // 下载为bpmn格式,done是个函数，调用的时候传入的
-    saveDiagram(done) {
+    async saveDiagram(done) {
       // 把传入的done再传给bpmn原型的saveXML函数调用
-      this.bpmnModeler.saveXML({ format: true }, function(err, xml) {
-        done(err, xml)
-      })
+      try {
+        const {xml} = await this.bpmnModeler.saveXML({format: true})
+        done(null, xml)
+      } catch (err) {
+        console.log(err)
+      }
+
+      // this.bpmnModeler.saveXML({format: true}, function (err, xml) {
+      //   done(err, xml)
+      // })
     },
     // 当图发生改变的时候会调用这个函数，这个data就是图的xml
     setEncoded(link, name, data) {
@@ -250,30 +281,36 @@ export default {
 .loading {
   font-size: 26px;
 }
+
 .containers {
   background-color: #ffffff;
   width: 100%;
   height: calc(100vh - 52px);
 }
+
 .canvas {
   width: 100%;
   height: 100%;
 }
+
 .panel {
   position: absolute;
   right: 0;
   top: 0;
   width: 300px;
 }
+
 .buttons {
   position: absolute;
   left: 20px;
   bottom: 20px;
 }
+
 .buttons li {
   display: inline-block;
   margin: 5px;
 }
+
 .buttons li a {
   color: #999;
   background: #eee;
@@ -282,6 +319,7 @@ export default {
   border: 1px solid #ccc;
   text-decoration: none;
 }
+
 .buttons li a.active {
   color: #333;
   background: #fff;
